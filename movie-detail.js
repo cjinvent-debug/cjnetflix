@@ -2,6 +2,107 @@ const API_KEY = 'c11e35890d148a8af9d3392db9ab8b0b';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const IMAGE_BASE_URL_ORIGINAL = 'https://image.tmdb.org/t/p/original';
 
+// Netflix 인트로 오디오 파일 로드
+let netflixAudio = null;
+
+// 오디오 파일 로드 시도
+function loadNetflixAudio() {
+    // netflixaudio.m4a 파일을 우선적으로 시도
+    const audioFormats = ['netflixaudio.m4a', 'netflix-intro.mp3', 'netflix-intro.wav', 'netflix-intro.ogg'];
+    
+    let formatIndex = 0;
+    
+    function tryNextFormat() {
+        if (formatIndex >= audioFormats.length) {
+            console.log('오디오 파일을 찾을 수 없습니다. 생성된 소리를 사용합니다.');
+            return;
+        }
+        
+        const audio = new Audio(audioFormats[formatIndex]);
+        audio.preload = 'auto';
+        
+        audio.addEventListener('canplaythrough', () => {
+            netflixAudio = audio;
+            console.log('Netflix 오디오 파일 로드 성공:', audioFormats[formatIndex]);
+        });
+        
+        audio.addEventListener('error', () => {
+            // 다음 형식 시도
+            formatIndex++;
+            tryNextFormat();
+        });
+        
+        audio.load();
+    }
+    
+    tryNextFormat();
+}
+
+// Netflix 사운드 재생 함수
+function playNetflixSound() {
+    // 오디오 파일이 있으면 사용
+    if (netflixAudio) {
+        try {
+            netflixAudio.currentTime = 0; // 처음부터 재생
+            netflixAudio.play().catch(error => {
+                console.log('오디오 재생 실패:', error);
+                // 오디오 파일 재생 실패 시 생성된 소리 사용
+                playGeneratedSound();
+            });
+        } catch (error) {
+            console.log('오디오 재생 실패:', error);
+            playGeneratedSound();
+        }
+    } else {
+        // 오디오 파일이 없으면 생성된 소리 사용
+        playGeneratedSound();
+    }
+}
+
+// 생성된 소리 재생 (fallback)
+function playGeneratedSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const duration = 0.5;
+        const sampleRate = audioContext.sampleRate;
+        const frameCount = sampleRate * duration;
+        const buffer = audioContext.createBuffer(1, frameCount, sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < frameCount; i++) {
+            const t = i / sampleRate;
+            let sample = 0;
+            
+            if (t < 0.08) {
+                const taTime = t / 0.08;
+                const freq = 180 + taTime * 100;
+                const amp = 0.6 * Math.exp(-taTime * 8);
+                sample += Math.sin(2 * Math.PI * freq * t) * amp;
+                sample += Math.sin(2 * Math.PI * freq * 2 * t) * amp * 0.4;
+                sample += Math.sin(2 * Math.PI * freq * 3 * t) * amp * 0.2;
+            } else {
+                const dumTime = (t - 0.08) / 0.42;
+                const freq = 350 - dumTime * 210;
+                const amp = 0.7 * Math.exp(-dumTime * 3.5);
+                sample += Math.sin(2 * Math.PI * freq * t) * amp;
+                sample += Math.sin(2 * Math.PI * freq * 2 * t) * amp * 0.5;
+                sample += Math.sin(2 * Math.PI * freq * 3 * t) * amp * 0.25;
+                sample += Math.sin(2 * Math.PI * freq * 4 * t) * amp * 0.15;
+            }
+            
+            const globalEnvelope = Math.exp(-t * 1.8);
+            data[i] = sample * globalEnvelope;
+        }
+
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+    } catch (error) {
+        console.log('오디오 재생 실패:', error);
+    }
+}
+
 // URL에서 영화 ID 가져오기
 function getMovieIdFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -108,6 +209,9 @@ function displayMovieDetail(movie) {
     
     // 페이지 제목 업데이트
     document.title = `${movie.title} - CJNETFLIX`;
+    
+    // 상세 페이지가 표시될 때 오디오 재생
+    playNetflixSound();
 }
 
 // 에러 메시지 표시
@@ -125,6 +229,9 @@ function showError(errorMessage) {
 
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', () => {
+    // 오디오 파일 로드
+    loadNetflixAudio();
+    
     const movieId = getMovieIdFromURL();
     
     if (!movieId) {
