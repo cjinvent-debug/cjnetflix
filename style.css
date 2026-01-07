@@ -1,0 +1,268 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #141414;
+    color: #ffffff;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Header Styles */
+.header {
+    background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 20px 50px;
+    transition: background-color 0.3s;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #e50914;
+    letter-spacing: 2px;
+    text-decoration: none;
+}
+
+.nav {
+    display: flex;
+    gap: 30px;
+}
+
+.nav-link {
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+    position: relative;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #ffffff;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #e50914;
+}
+
+/* Main Content */
+.main {
+    margin-top: 80px;
+    padding: 40px 50px;
+}
+
+.hero {
+    max-width: 1400px;
+    margin: 0 auto 60px auto;
+}
+
+.section-title {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+/* Movies Container */
+.movies-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    font-size: 1.2rem;
+    color: #808080;
+}
+
+/* Movie Card */
+.movie-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: #1a1a1a;
+    aspect-ratio: 2/3;
+}
+
+.movie-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(229, 9, 20, 0.3);
+    z-index: 10;
+}
+
+.movie-rank-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.movie-poster-placeholder {
+    width: 100%;
+    height: 80%;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.movie-info {
+    padding: 12px;
+    height: 20%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #1a1a1a;
+}
+
+.movie-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.movie-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.movie-release-date,
+.movie-popularity {
+    font-size: 0.75rem;
+    color: #b3b3b3;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.movie-poster {
+    width: 100%;
+    height: 80%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Footer */
+.footer {
+    background-color: #000000;
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: 60px;
+    color: #808080;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 15px 20px;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    .nav {
+        gap: 15px;
+    }
+
+    .nav-link {
+        font-size: 0.8rem;
+    }
+
+    .main {
+        padding: 30px 20px;
+    }
+
+    .movies-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .movies-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    .movie-title {
+        font-size: 0.85rem;
+    }
+
+    .movie-rank-badge {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+        top: 8px;
+        left: 8px;
+    }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #141414;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

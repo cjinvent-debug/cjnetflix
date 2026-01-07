@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix - 현재 상영 중</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo">CJNETFLIX</h1>
+            <nav class="nav">
+                <a href="#" class="nav-link active">홈</a>
+                <a href="#" class="nav-link">영화</a>
+                <a href="#" class="nav-link">시리즈</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <h2 class="section-title">인기도 TOP10</h2>
+            <div class="movies-container" id="top10Container">
+                <div class="loading">영화를 불러오는 중...</div>
+            </div>
+        </section>
+        <section class="hero">
+            <h2 class="section-title">전체 영화 (개봉순)</h2>
+            <div class="movies-container" id="allMoviesContainer">
+                <div class="loading">영화를 불러오는 중...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Netflix Clone. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
