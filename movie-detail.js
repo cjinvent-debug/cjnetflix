@@ -4,65 +4,95 @@ const IMAGE_BASE_URL_ORIGINAL = 'https://image.tmdb.org/t/p/original';
 
 // Netflix 인트로 오디오 파일 로드
 let netflixAudio = null;
+let isPlaying = false; // 오디오 재생 중인지 추적
+let isLoading = false; // 오디오 로드 중인지 추적
 
 // 오디오 파일 로드 시도
 function loadNetflixAudio() {
-    // netflixaudio.m4a 파일을 우선적으로 시도
-    const audioFormats = ['netflixaudio.m4a', 'netflix-intro.mp3', 'netflix-intro.wav', 'netflix-intro.ogg'];
-    
-    let formatIndex = 0;
-    
-    function tryNextFormat() {
-        if (formatIndex >= audioFormats.length) {
-            console.log('오디오 파일을 찾을 수 없습니다. 생성된 소리를 사용합니다.');
-            return;
-        }
-        
-        const audio = new Audio(audioFormats[formatIndex]);
-        audio.preload = 'auto';
-        
-        audio.addEventListener('canplaythrough', () => {
-            netflixAudio = audio;
-            console.log('Netflix 오디오 파일 로드 성공:', audioFormats[formatIndex]);
-        });
-        
-        audio.addEventListener('error', () => {
-            // 다음 형식 시도
-            formatIndex++;
-            tryNextFormat();
-        });
-        
-        audio.load();
+    // 이미 로드되었거나 로드 중이면 중복 로드 방지
+    if (netflixAudio || isLoading) {
+        return;
     }
     
-    tryNextFormat();
+    isLoading = true;
+    // netflixaudio.m4a 파일만 사용
+    const audio = new Audio('netflixaudio.m4a');
+    audio.preload = 'auto';
+    
+    audio.addEventListener('canplaythrough', () => {
+        netflixAudio = audio;
+        isLoading = false;
+        console.log('Netflix 오디오 파일 로드 성공: netflixaudio.m4a');
+    });
+    
+    audio.addEventListener('error', () => {
+        isLoading = false;
+        console.log('오디오 파일을 찾을 수 없습니다: netflixaudio.m4a');
+    });
+    
+    audio.load();
 }
 
 // Netflix 사운드 재생 함수
 function playNetflixSound() {
-    // 오디오 파일이 있으면 사용
+    // 이미 재생 중이면 중복 재생 방지
+    if (isPlaying) {
+        return;
+    }
+    
+    // netflixaudio.m4a 파일만 재생 (다른 소리는 재생하지 않음)
     if (netflixAudio) {
         try {
+            isPlaying = true;
             netflixAudio.currentTime = 0; // 처음부터 재생
-            netflixAudio.play().catch(error => {
+            netflixAudio.play().then(() => {
+                // 재생 완료 시 isPlaying 리셋
+                netflixAudio.addEventListener('ended', () => {
+                    isPlaying = false;
+                }, { once: true });
+            }).catch(error => {
                 console.log('오디오 재생 실패:', error);
-                // 오디오 파일 재생 실패 시 생성된 소리 사용
-                playGeneratedSound();
+                isPlaying = false;
+                // netflixaudio.m4a만 사용하므로 실패 시 아무 소리도 재생하지 않음
             });
         } catch (error) {
             console.log('오디오 재생 실패:', error);
-            playGeneratedSound();
+            isPlaying = false;
+            // netflixaudio.m4a만 사용하므로 실패 시 아무 소리도 재생하지 않음
         }
     } else {
-        // 오디오 파일이 없으면 생성된 소리 사용
-        playGeneratedSound();
+        // 오디오 파일이 아직 로드되지 않았으면 로드 시도
+        loadNetflixAudio();
+        // 로드 완료를 기다렸다가 재생 시도
+        const checkAudio = setInterval(() => {
+            if (netflixAudio) {
+                clearInterval(checkAudio);
+                playNetflixSound();
+            }
+        }, 100);
+        // 3초 후에도 로드되지 않으면 포기
+        setTimeout(() => {
+            clearInterval(checkAudio);
+        }, 3000);
     }
 }
+
+// AudioContext 재사용을 위한 전역 변수
+let audioContext = null;
 
 // 생성된 소리 재생 (fallback)
 function playGeneratedSound() {
     try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // AudioContext 재사용 (없으면 생성)
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // AudioContext가 suspended 상태면 resume
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        
         const duration = 0.5;
         const sampleRate = audioContext.sampleRate;
         const frameCount = sampleRate * duration;
@@ -98,8 +128,14 @@ function playGeneratedSound() {
         source.buffer = buffer;
         source.connect(audioContext.destination);
         source.start(0);
+        
+        // 재생 완료 시 isPlaying 리셋
+        source.addEventListener('ended', () => {
+            isPlaying = false;
+        }, { once: true });
     } catch (error) {
         console.log('오디오 재생 실패:', error);
+        isPlaying = false;
     }
 }
 
