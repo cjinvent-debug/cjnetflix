@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 상세정보 - CJNETFLIX</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo"><a href="index.html" style="text-decoration: none; color: inherit;">CJNETFLIX</a></h1>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="#" class="nav-link">영화</a>
+                <a href="#" class="nav-link">시리즈</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main detail-main">
+        <div id="loading" class="loading-container">
+            <div class="loading">영화 정보를 불러오는 중...</div>
+        </div>
+        
+        <div id="movieDetail" class="movie-detail-container" style="display: none;">
+            <button class="back-button" onclick="window.location.href='index.html'">← 뒤로 가기</button>
+            
+            <div class="movie-detail-hero">
+                <div class="movie-detail-poster">
+                    <img id="detailPoster" src="" alt="영화 포스터" class="detail-poster-image">
+                </div>
+                
+                <div class="movie-detail-info">
+                    <h1 id="detailTitle" class="detail-title"></h1>
+                    <div class="detail-meta">
+                        <span id="detailReleaseDate" class="detail-meta-item"></span>
+                        <span id="detailRuntime" class="detail-meta-item"></span>
+                        <span id="detailRating" class="detail-meta-item"></span>
+                    </div>
+                    <div id="detailGenres" class="detail-genres"></div>
+                    <p id="detailOverview" class="detail-overview"></p>
+                    <div class="detail-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">인기도</span>
+                            <span id="detailPopularity" class="stat-value"></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">평점</span>
+                            <span id="detailVoteAverage" class="stat-value"></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">투표 수</span>
+                            <span id="detailVoteCount" class="stat-value"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="errorMessage" class="error-container" style="display: none;">
+            <div class="error-content">
+                <h2>영화 정보를 불러올 수 없습니다</h2>
+                <p id="errorText"></p>
+                <button class="back-button" onclick="window.location.href='index.html'">홈으로 돌아가기</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Netflix Clone. All rights reserved.</p>
+    </footer>
+
+    <script src="movie-detail.js"></script>
+</body>
+</html>

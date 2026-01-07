@@ -12,22 +12,39 @@
             <h1 class="logo">CJNETFLIX</h1>
             <nav class="nav">
                 <a href="#" class="nav-link active">홈</a>
-                <a href="#" class="nav-link">영화</a>
-                <a href="#" class="nav-link">시리즈</a>
+                <div class="search-container">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" id="searchInput" class="search-input" placeholder="영화 검색..." autocomplete="off">
+                </div>
             </nav>
         </div>
     </header>
 
     <main class="main">
-        <section class="hero">
+        <section class="hero" id="searchResultsSection" style="display: none;">
+            <h2 class="section-title">검색 결과</h2>
+            <div class="movies-container" id="searchResultsContainer">
+                <div class="loading">검색 중...</div>
+            </div>
+        </section>
+        <section class="hero" id="mainContent">
             <h2 class="section-title">인기도 TOP10</h2>
             <div class="movies-container" id="top10Container">
                 <div class="loading">영화를 불러오는 중...</div>
             </div>
         </section>
-        <section class="hero">
+        <section class="hero" id="allMoviesSection">
             <h2 class="section-title">전체 영화 (개봉순)</h2>
             <div class="movies-container" id="allMoviesContainer">
+                <div class="loading">영화를 불러오는 중...</div>
+            </div>
+        </section>
+        <section class="hero" id="upcomingSection">
+            <h2 class="section-title">개봉예정 영화</h2>
+            <div class="movies-container" id="upcomingContainer">
                 <div class="loading">영화를 불러오는 중...</div>
             </div>
         </section>

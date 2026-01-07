@@ -1,9 +1,20 @@
 const API_KEY = 'c11e35890d148a8af9d3392db9ab8b0b';
 const API_URL = 'https://api.themoviedb.org/3/movie/now_playing';
+const UPCOMING_API_URL = 'https://api.themoviedb.org/3/movie/upcoming';
+const SEARCH_API_URL = 'https://api.themoviedb.org/3/search/movie';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 const top10Container = document.getElementById('top10Container');
 const allMoviesContainer = document.getElementById('allMoviesContainer');
+const upcomingContainer = document.getElementById('upcomingContainer');
+const searchResultsContainer = document.getElementById('searchResultsContainer');
+const searchResultsSection = document.getElementById('searchResultsSection');
+const searchInput = document.getElementById('searchInput');
+const mainContent = document.getElementById('mainContent');
+const allMoviesSection = document.getElementById('allMoviesSection');
+const upcomingSection = document.getElementById('upcomingSection');
+
+let searchTimeout = null;
 
 // Netflix 인트로 오디오 파일 로드
 let netflixAudio = null;
@@ -152,7 +163,7 @@ function createMovieCard(movie, showRank = false, rank = null) {
         : '0.0';
 
     return `
-        <div class="movie-card">
+        <div class="movie-card" data-movie-id="${movie.id}">
             ${showRank && rank ? `<div class="movie-rank-badge">${rank}</div>` : ''}
             ${posterPath 
                 ? `<img src="${posterPath}" alt="${movie.title}" class="movie-poster" loading="lazy">`
@@ -227,12 +238,171 @@ function attachClickEvents() {
     allCards.forEach(card => {
         card.addEventListener('click', () => {
             playNetflixSound();
+            const movieId = card.getAttribute('data-movie-id');
+            if (movieId) {
+                // 사운드 재생 후 상세 페이지로 이동
+                setTimeout(() => {
+                    window.location.href = `movie-detail.html?id=${movieId}`;
+                }, 300);
+            }
         });
+    });
+}
+
+// 개봉예정 영화 데이터 가져오기
+async function fetchUpcomingMovies() {
+    try {
+        const response = await fetch(`${UPCOMING_API_URL}?api_key=${API_KEY}&language=ko-KR&page=1`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        displayUpcomingMovies(data.results);
+    } catch (error) {
+        console.error('개봉예정 영화 데이터를 가져오는 중 오류 발생:', error);
+        const errorMessage = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #e50914;">
+                <p>개봉예정 영화를 불러오는 중 오류가 발생했습니다.</p>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: #808080;">${error.message}</p>
+            </div>
+        `;
+        upcomingContainer.innerHTML = errorMessage;
+    }
+}
+
+// 개봉예정 영화 표시
+function displayUpcomingMovies(movies) {
+    if (!movies || movies.length === 0) {
+        const emptyMessage = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #808080;">
+                개봉예정 영화가 없습니다.
+            </div>
+        `;
+        upcomingContainer.innerHTML = emptyMessage;
+        return;
+    }
+
+    // 개봉일 순으로 정렬 (오름차순 - 가장 가까운 날짜부터)
+    const sortedMovies = [...movies].sort((a, b) => {
+        const dateA = a.release_date ? new Date(a.release_date) : new Date(0);
+        const dateB = b.release_date ? new Date(b.release_date) : new Date(0);
+        return dateA - dateB; // 오름차순 (가까운 날짜부터)
+    });
+
+    // 개봉예정 영화 섹션 표시
+    upcomingContainer.innerHTML = sortedMovies.map(movie => 
+        createMovieCard(movie, false)
+    ).join('');
+
+    // 개봉예정 영화 카드에 클릭 이벤트 추가
+    attachClickEvents();
+}
+
+// 영화 검색 함수
+async function searchMovies(query) {
+    if (!query || query.trim() === '') {
+        // 검색어가 비어있으면 메인 콘텐츠 표시
+        searchResultsSection.style.display = 'none';
+        mainContent.style.display = 'block';
+        allMoviesSection.style.display = 'block';
+        upcomingSection.style.display = 'block';
+        return;
+    }
+
+    try {
+        searchResultsContainer.innerHTML = '<div class="loading">검색 중...</div>';
+        searchResultsSection.style.display = 'block';
+        mainContent.style.display = 'none';
+        allMoviesSection.style.display = 'none';
+        upcomingSection.style.display = 'none';
+
+        const response = await fetch(
+            `${SEARCH_API_URL}?api_key=${API_KEY}&language=ko-KR&query=${encodeURIComponent(query)}&page=1`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        displaySearchResults(data.results, query);
+    } catch (error) {
+        console.error('영화 검색 중 오류 발생:', error);
+        const errorMessage = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #e50914;">
+                <p>검색 중 오류가 발생했습니다.</p>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: #808080;">${error.message}</p>
+            </div>
+        `;
+        searchResultsContainer.innerHTML = errorMessage;
+    }
+}
+
+// 검색 결과 표시
+function displaySearchResults(movies, query) {
+    if (!movies || movies.length === 0) {
+        const emptyMessage = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #808080;">
+                <p>"${query}"에 대한 검색 결과가 없습니다.</p>
+            </div>
+        `;
+        searchResultsContainer.innerHTML = emptyMessage;
+        return;
+    }
+
+    // 검색 결과 섹션 제목 업데이트
+    const sectionTitle = searchResultsSection.querySelector('.section-title');
+    sectionTitle.textContent = `"${query}" 검색 결과 (${movies.length}개)`;
+
+    // 검색 결과 표시
+    searchResultsContainer.innerHTML = movies.map(movie => 
+        createMovieCard(movie, false)
+    ).join('');
+
+    // 검색 결과 카드에 클릭 이벤트 추가
+    attachClickEvents();
+}
+
+// 검색 입력 이벤트 리스너
+function setupSearchListener() {
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        
+        // 디바운싱: 입력이 멈춘 후 500ms 후에 검색 실행
+        clearTimeout(searchTimeout);
+        
+        if (query === '') {
+            // 검색어가 비어있으면 즉시 메인 콘텐츠 표시
+            searchResultsSection.style.display = 'none';
+            mainContent.style.display = 'block';
+            allMoviesSection.style.display = 'block';
+            upcomingSection.style.display = 'block';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            searchMovies(query);
+        }, 500);
+    });
+
+    // Enter 키로 즉시 검색
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            if (query) {
+                searchMovies(query);
+            }
+        }
     });
 }
 
 // 페이지 로드 시 영화 데이터 가져오기 및 오디오 로드
 document.addEventListener('DOMContentLoaded', () => {
     fetchMovies();
+    fetchUpcomingMovies();
     loadNetflixAudio();
+    setupSearchListener();
 });
